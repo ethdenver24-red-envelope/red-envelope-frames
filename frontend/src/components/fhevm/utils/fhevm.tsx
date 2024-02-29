@@ -1,3 +1,5 @@
+"use client";
+
 import { BrowserProvider, AbiCoder } from "ethers";
 import { initFhevm, createInstance, FhevmInstance } from "fhevmjs";
 
