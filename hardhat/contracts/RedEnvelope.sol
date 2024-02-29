@@ -7,7 +7,7 @@ import "./EncryptedERC20.sol";
 import "./interfaces/IRedEnvelope.sol";
 
 contract RedEnvelope is IRedEnvelope {
-    using TFHE for euint32;
+    using TFHE for *;
 
     address public creator;
     EncryptedERC20 public token;
@@ -18,7 +18,7 @@ contract RedEnvelope is IRedEnvelope {
     euint32[] internal _amounts;
     euint32 internal _topAmount;
 
-    mapping(address => ebool) internal _claimed;
+    mapping(address => bool) internal _claimed;
     mapping(address => uint32) internal _claimedAmounts;
 
     constructor(address _creator, EncryptedERC20 _token, uint256 _maxGifts, euint32 _totalAmount) {
@@ -42,12 +42,12 @@ contract RedEnvelope is IRedEnvelope {
 
     function claim(address user) external returns (uint32) {
         TFHE.optReq(TFHE.asEbool(claimedGifts < maxGifts));
-        TFHE.optReq(TFHE.not(_claimed[user]));
+        TFHE.optReq(TFHE.asEbool(_claimed[user]));
 
         euint32 amount = _amounts[claimedGifts];
         uint32 amountDecrypted = amount.decrypt();
         _claimers[claimedGifts] = user;
-        _claimed[user] = TFHE.asEbool(true);
+        _claimed[user] = true;
         _claimedAmounts[user] = amountDecrypted;
         claimedGifts += 1;
 
@@ -55,6 +55,10 @@ contract RedEnvelope is IRedEnvelope {
 
         emit GiftClaimed(user, address(token), amountDecrypted);
         return amountDecrypted;
+    }
+
+    function canClaim(address user) external view returns (bool) {
+        return !_claimed[user] && claimedGifts < maxGifts;
     }
 
     function getClaimers() external view returns (address[] memory) {
