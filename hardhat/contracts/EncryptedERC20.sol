@@ -70,6 +70,12 @@ contract EncryptedERC20 is EIP712WithModifier {
         _approve(owner, spender, TFHE.asEuint32(encryptedAmount));
     }
 
+    // Sets the `amount` as the allowance of `spender` over the caller's tokens.
+    function approve(address spender, euint32 amount) public {
+        address owner = msg.sender;
+        _approve(owner, spender, amount);
+    }
+
     // Returns the remaining number of tokens that `spender` is allowed to spend
     // on behalf of the caller. The returned ciphertext is under the caller public FHE key.
     function allowance(address spender, bytes32 publicKey, bytes calldata signature)
