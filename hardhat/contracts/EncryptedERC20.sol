@@ -8,8 +8,8 @@ import "fhevm/lib/TFHE.sol";
 
 contract EncryptedERC20 is EIP712WithModifier {
     euint32 private totalSupply;
-    string public constant name = "Confidential USD";
-    string public constant symbol = "CUSD";
+    string public constant name = "Confidential USDC";
+    string public constant symbol = "cUSDC";
     uint8 public constant decimals = 6;
 
     // used for output authorization
@@ -68,6 +68,12 @@ contract EncryptedERC20 is EIP712WithModifier {
     function approve(address spender, bytes calldata encryptedAmount) public {
         address owner = msg.sender;
         _approve(owner, spender, TFHE.asEuint32(encryptedAmount));
+    }
+
+    // Sets the `amount` as the allowance of `spender` over the caller's tokens.
+    function approve(address spender, euint32 amount) public {
+        address owner = msg.sender;
+        _approve(owner, spender, amount);
     }
 
     // Returns the remaining number of tokens that `spender` is allowed to spend
