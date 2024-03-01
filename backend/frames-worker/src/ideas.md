@@ -1,0 +1,5 @@
+- first image: "web3the third shared a red envelope"
+- then show a claim button and how many are left to claim 
+- if they have already claimed, show them how much they received
+- if they haven't claimed, allow them to claim and open envelope
+- then show then how much they received
