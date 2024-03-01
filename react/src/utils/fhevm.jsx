@@ -1,8 +1,5 @@
-"use client";
-
 import { BrowserProvider, AbiCoder } from "ethers";
-import { initFhevm, createInstance, FhevmInstance } from "fhevmjs";
-
+import { initFhevm, createInstance } from "fhevmjs";
 export const init = async () => {
   await initFhevm();
 };
@@ -13,7 +10,7 @@ const FHE_LIB_ADDRESS = "0x000000000000000000000000000000000000005d";
 
 export const provider = new BrowserProvider(window.ethereum);
 
-let instance: FhevmInstance;
+let instance;
 
 export const createFhevmInstance = async () => {
   const network = await provider.getNetwork();

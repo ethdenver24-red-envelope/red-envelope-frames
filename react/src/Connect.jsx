@@ -1,10 +1,6 @@
-"use client";
-
 import { BrowserProvider } from "ethers";
 import { createFhevmInstance } from "./utils/fhevm";
-import { useState, useCallback, useEffect, useMemo } from "react";
-import { Button } from "../ui/button";
-import React = require("react");
+import { useState, useCallback, useEffect, useMemo, React } from "react";
 
 const AUTHORIZED_CHAIN_ID = ["0x2382", "0x2383"]; // 9090, 9091
 
@@ -14,6 +10,7 @@ export const Connect = ({ children }) => {
   const [account, setAccount] = useState("");
   const [error, setError] = useState(null);
   const [provider, setProvider] = useState(null);
+  const [signer, setSigner] = useState(null);
 
   const refreshAccounts = (accounts) => {
     setAccount(accounts[0] || "");
@@ -21,7 +18,7 @@ export const Connect = ({ children }) => {
   };
 
   const hasValidNetwork = async () => {
-    const currentChainId = await window?.ethereum.request({
+    const currentChainId = await window.ethereum.request({
       method: "eth_chainId",
     });
     return AUTHORIZED_CHAIN_ID.includes(currentChainId.toLowerCase());
@@ -36,14 +33,22 @@ export const Connect = ({ children }) => {
     }
   }, []);
 
-  const refreshProvider = (eth) => {
+  const refreshProvider = async (eth) => {
     const p = new BrowserProvider(eth);
     setProvider(p);
     return p;
   };
 
   useEffect(() => {
-    const eth = window?.ethereum;
+    if (provider) {
+      // provider.getSigner().then((s) => {
+      //   setSigner(s);
+      // });
+    }
+  }, [provider]);
+
+  useEffect(() => {
+    const eth = window.ethereum;
     if (!eth) {
       setError("No wallet has been found");
       return;
@@ -80,12 +85,12 @@ export const Connect = ({ children }) => {
 
   const switchNetwork = useCallback(async () => {
     try {
-      await window?.ethereum.request({
+      await window.ethereum.request({
         method: "wallet_switchEthereumChain",
         params: [{ chainId: AUTHORIZED_CHAIN_ID[0] }],
       });
     } catch (e) {
-      await window?.ethereum.request({
+      await window.ethereum.request({
         method: "wallet_addEthereumChain",
         params: [
           {
@@ -123,16 +128,20 @@ export const Connect = ({ children }) => {
       );
     }
 
-    return children(account, provider);
-  }, [account, provider, validNetwork, children, switchNetwork]);
+    return children(account, provider, signer);
+  }, [account, provider, validNetwork, children, switchNetwork, signer]);
 
   if (error) {
     return <p>No wallet has been found.</p>;
   }
 
   const connectInfos = (
-    <div>
-      {!connected && <Button onClick={connect}>Connect</Button>}
+    <div className="Connect__info">
+      {!connected && (
+        <button className="Connect__button" onClick={connect}>
+          Connect your wallet
+        </button>
+      )}
       {connected && (
         <div className="Connect__account">Connected with {account}</div>
       )}
