@@ -7,6 +7,7 @@ import { resolve } from "path";
 
 import "./tasks/accounts";
 import "./tasks/deployERC20";
+import "./tasks/getBalance";
 import "./tasks/getEthereumAddress";
 import "./tasks/mint";
 
@@ -20,7 +21,7 @@ if (!mnemonic) {
 }
 
 const chainIds = {
-  local: 9090,
+  local: 9091,
   inco: 9090,
   "arbitrum-mainnet": 42161,
   avalanche: 43114,
@@ -66,7 +67,7 @@ function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
 }
 
 const config: HardhatUserConfig = {
-  defaultNetwork: "local",
+  defaultNetwork: "inco",
   namedAccounts: {
     deployer: 0,
   },

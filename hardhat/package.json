@@ -81,6 +81,7 @@
     "task:mint": "hardhat task:mint",
     "task:deployERC20": "hardhat task:deployERC20",
     "task:accounts": "hardhat task:accounts",
+    "task:getBalance": "hardhat task:getBalance",
     "fhevm:start": "docker run -i -p 8545:8545 --rm --name fhevm docker.io/inconetwork/inco-chain:0.1.9.1-hardhat-template",
     "fhevm:stop": "docker rm -f fhevm",
     "fhevm:restart": "fhevm:stop && fhevm:start",
