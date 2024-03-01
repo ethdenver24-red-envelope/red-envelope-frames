@@ -42,7 +42,7 @@ app.frame('/open/:envelopeId', (c: FrameContext) => {
 app.frame('/check/:envelopeId', (c: FrameContext) => {
     const { envelopeId } = c.req.params;
     const { fid } = c.frameData; // Extracting user's id
-    const isEntitled = checkIfUserIsEntitled(envelopeId, fid);
+    const isEntitled = canClaim(envelopeId, fid);
 
     let image, buttonValue, buttonText, action;
     if (isEntitled) {
