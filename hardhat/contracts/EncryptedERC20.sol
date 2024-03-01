@@ -8,8 +8,8 @@ import "fhevm/lib/TFHE.sol";
 
 contract EncryptedERC20 is EIP712WithModifier {
     euint32 private totalSupply;
-    string public constant name = "Confidential USD";
-    string public constant symbol = "CUSD";
+    string public constant name = "Confidential USDC";
+    string public constant symbol = "cUSDC";
     uint8 public constant decimals = 6;
 
     // used for output authorization
