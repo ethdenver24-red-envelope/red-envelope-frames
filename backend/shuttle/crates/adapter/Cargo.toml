@@ -1,0 +1,32 @@
+[package]
+name = "redenvelopeframes-adapter"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+exclude.workspace = true
+
+[dependencies]
+# ethers
+ethers = "2.0.13"
+ethers-contract-abigen = "2.0.13"
+
+# alloy
+alloy-transport = { git = "https://github.com/alloy-rs/alloy", branch = "main" }
+alloy-transport-http = { git = "https://github.com/alloy-rs/alloy", branch = "main" }
+alloy-primitives = { version = "0.6" }
+alloy-signer = { git = "https://github.com/alloy-rs/alloy", branch = "main", features = [
+    "mnemonic",
+] }
+alloy-providers = { git = "https://github.com/alloy-rs/alloy", branch = "main" }
+alloy-node-bindings = { git = "https://github.com/alloy-rs/alloy", branch = "main" }
+alloy-chains = { version = "0.1" }
+foundry-block-explorers = "0.2.3"
+
+# runtime
+tokio = { version = "1", features = ["full"] }
+
+# env
+dotenvy = "0.15.7"
+
+# error handling
+anyhow = "1.0.40"

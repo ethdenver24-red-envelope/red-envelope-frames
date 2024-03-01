@@ -1,0 +1,41 @@
+[package]
+name = "redenvelopeframes-server"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+exclude.workspace = true
+
+[[bin]]
+name = "redenvelopeframes-server"
+path = "src/bin/shuttle.rs"
+
+[[bin]]
+name = "standalone"
+path = "src/bin/standalone.rs"
+
+[dependencies]
+redenvelopeframes-adapter = { path = "../adapter" }
+
+# web server
+axum = "0.7.3"
+
+# shuttle
+shuttle-axum = "0.39.0"
+shuttle-runtime = "0.39.0"
+shuttle-secrets = "0.39.0"
+
+# errors
+anyhow = "1.0.80"
+
+# async runtime
+tokio = "1.28.2"
+
+# tracing
+tracing = "0.1.40"
+
+# env
+dotenvy = "0.15.7"
+
+# serde
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
