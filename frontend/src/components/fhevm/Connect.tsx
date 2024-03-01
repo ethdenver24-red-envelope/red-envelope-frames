@@ -21,7 +21,7 @@ export const Connect = ({ children }) => {
   };
 
   const hasValidNetwork = async () => {
-    const currentChainId = await window.ethereum.request({
+    const currentChainId = await window?.ethereum.request({
       method: "eth_chainId",
     });
     return AUTHORIZED_CHAIN_ID.includes(currentChainId.toLowerCase());
@@ -43,7 +43,7 @@ export const Connect = ({ children }) => {
   };
 
   useEffect(() => {
-    const eth = window.ethereum;
+    const eth = window?.ethereum;
     if (!eth) {
       setError("No wallet has been found");
       return;
@@ -80,12 +80,12 @@ export const Connect = ({ children }) => {
 
   const switchNetwork = useCallback(async () => {
     try {
-      await window.ethereum.request({
+      await window?.ethereum.request({
         method: "wallet_switchEthereumChain",
         params: [{ chainId: AUTHORIZED_CHAIN_ID[0] }],
       });
     } catch (e) {
-      await window.ethereum.request({
+      await window?.ethereum.request({
         method: "wallet_addEthereumChain",
         params: [
           {
