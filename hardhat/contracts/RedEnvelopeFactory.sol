@@ -21,7 +21,7 @@ contract RedEnvelopeFactory is IRedEnvelopeFactory {
         envelope.setAmounts(totalAmount);
         envelopes.push(envelope);
         numEnvelopes += 1;
-        erc20.transferFrom(msg.sender, address(envelope), totalAmount);
+        // erc20.transferFrom(msg.sender, address(envelope), totalAmount);
         emit RedEnvelopeCreated(envelope, msg.sender, token, maxGifts);
         return envelope;
     }
