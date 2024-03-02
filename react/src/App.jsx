@@ -1,10 +1,18 @@
 import "./App.css";
-import { ethers } from "ethers";
+import { ethers, Interface } from "ethers";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Form, Button } from "react-bootstrap";
-import { init, getInstance } from "./utils/fhevm";
+
+import { init, getInstance, getEncryptedBalance } from "./utils/fhevm";
 import { toHexString } from "./utils/utils";
 import { Connect } from "./Connect";
+import RedEnvelopeFactoryAbi from "./abis/RedEnvelopeFactory.json";
+import EncryptedERC20Abi from "./abis/EncryptedERC20.json";
+
+const FACTORY = "0x7737b7c57827c7Aa99a254ba8bd0719013d1C860";
+const TOKEN = "0xC9981c2179a7d52E15A64e4B82eA54bB693407fe";
+const ENVELOPE = "0xc1a0a99B9783Eb5c1cc760F80a45ec29B70d0A68";
+const FRAME_URL = "https://667c-37-19-210-5.ngrok-free.app/open/";
 
 function App() {
   const [isInitialized, setIsInitialized] = useState(false);
@@ -32,22 +40,20 @@ function App() {
   );
 }
 
-function Example({ account, provider }) {
-  const [tokenAddress, setTokenAddress] = useState("");
+function Example({ account, provider, signer }) {
+  const [tokenAddress, setTokenAddress] = useState(TOKEN);
   const [numRecipients, setNumRecipients] = useState("");
   const [amountUint32, setAmountUint32] = useState("");
   const [eamountUint32, setEamountUint32] = useState("");
+  const [balance, setBalance] = useState("");
+  const [displayUrl, setDisplayUrl] = useState();
 
   const [factoryContract, tokenContract] = useMemo(
     () => [
-      new ethers.Contract(
-        "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-        ["create(address,uint256,bytes)"],
-        provider
-      ),
-      new ethers.Contract(tokenAddress, ["balanceOf(address,bytes)"], provider),
+      new ethers.Contract(FACTORY, RedEnvelopeFactoryAbi, signer),
+      new ethers.Contract(tokenAddress, EncryptedERC20Abi, signer),
     ],
-    [provider, tokenAddress]
+    [signer, tokenAddress]
   );
 
   const handleTokenChange = (event) => {
@@ -59,33 +65,51 @@ function Example({ account, provider }) {
   };
 
   const handleAmountChangeUint32 = (event) => {
-    let _instance = getInstance();
-    _instance.then((instance) => {
-      setEamountUint32(toHexString(instance.encrypt32(+event.target.value)));
-    });
     setAmountUint32(event.target.value);
   };
 
-  const handleCreate = () => {
-    const contract = new ethers.Contract(
-      "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-      ["create(address,uint256,bytes)"],
-      provider
-    );
-    contract.create(tokenAddress, numRecipients, eamountUint32).then((tx) => {
-      console.log(tx);
-    });
-  };
+  const handleCreate = useCallback(async () => {
+    // // dev
+    // setDisplayUrl(`${FRAME_URL}${ENVELOPE}`);
+    // return;
 
-  const getBalance = useCallback(async () => {
-    if (!tokenAddress) return;
-    const signature = await signer.signTypedData(
-      generatedToken.eip712.domain,
-      { Reencrypt: generatedToken.eip712.types.Reencrypt }, // Need to remove EIP712Domain from types
-      generatedToken.eip712.message
+    console.log("Creating red envelope");
+    if (!tokenAddress || !numRecipients || !amountUint32 || !signer) return;
+    // approve tokens
+    console.log("Encrypting token amount");
+    const instance = await getInstance();
+    const encryptedApprovalAmount = instance.encrypt32(+amountUint32);
+    const tx = await tokenContract.approve(
+      tokenAddress,
+      encryptedApprovalAmount
     );
-    const balance = await tokenContract.balanceOf(account, "0x");
-  }, [tokenContract, account, signer]);
+    console.log(tx);
+    await tx.wait();
+    console.log("Tokens approved");
+    // create red envelope
+    console.log("Creating red envelope");
+    console.log(tokenAddress, numRecipients, encryptedApprovalAmount);
+    const tx2 = await factoryContract.create(
+      tokenAddress,
+      numRecipients,
+      encryptedApprovalAmount
+    );
+    console.log(tx2);
+    await tx2.wait();
+    console.log("Red envelope created");
+    // get return value from tx2
+    const iface = new Interface(RedEnvelopeFactoryAbi);
+    const event = iface.parseLog(tx2.logs[0]);
+    const redEnvelopeAddress = event.args[0];
+    console.log(redEnvelopeAddress);
+  }, [tokenAddress, numRecipients, amountUint32, signer]);
+
+  const handleResolveBalance = useCallback(async () => {
+    if (!tokenAddress || !signer) return;
+    console.log("Fetching balance");
+    const balance = await getEncryptedBalance(tokenAddress, signer, account);
+    console.log(balance);
+  }, [tokenAddress, signer, account]);
 
   return (
     <div>
@@ -105,7 +129,9 @@ function Example({ account, provider }) {
           />
         </Form.Group>
         <Form.Group className="form-group">
-          <Form.Label className="label">Amount: </Form.Label>
+          <Form.Label className="label">
+            Amount: (<span onClick={handleResolveBalance}>max</span>)
+          </Form.Label>
           <Form.Control
             style={{ color: "white" }}
             type="text"
@@ -128,13 +154,21 @@ function Example({ account, provider }) {
         </Form.Group>
       </Form>
       <br></br>
-      <Button
-        variant="default"
-        onClick={handleCreate}
-        disabled={!tokenAddress || !numRecipients || !amountUint32}
-      >
-        Create
-      </Button>
+      {displayUrl ? (
+        <>
+          Frame link:
+          <br />
+          {displayUrl}
+        </>
+      ) : (
+        <Button
+          variant="default"
+          onClick={handleCreate}
+          disabled={!tokenAddress || !numRecipients || !amountUint32}
+        >
+          Create
+        </Button>
+      )}
     </div>
   );
 }

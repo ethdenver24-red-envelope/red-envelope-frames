@@ -10,7 +10,7 @@ export const Connect = ({ children }) => {
   const [account, setAccount] = useState("");
   const [error, setError] = useState(null);
   const [provider, setProvider] = useState(null);
-  const [signer, setSigner] = useState(null);
+  const [signer, setSigner] = useState();
 
   const refreshAccounts = (accounts) => {
     setAccount(accounts[0] || "");
@@ -33,7 +33,7 @@ export const Connect = ({ children }) => {
     }
   }, []);
 
-  const refreshProvider = async (eth) => {
+  const refreshProvider = (eth) => {
     const p = new BrowserProvider(eth);
     setProvider(p);
     return p;
@@ -41,9 +41,16 @@ export const Connect = ({ children }) => {
 
   useEffect(() => {
     if (provider) {
-      // provider.getSigner().then((s) => {
-      //   setSigner(s);
-      // });
+      provider
+        .getSigner()
+        .then((s) => {
+          console.log("SIGNER:");
+          console.log(s);
+          setSigner(s);
+        })
+        .catch(() => {
+          console.log("ERROR");
+        });
     }
   }, [provider]);
 
