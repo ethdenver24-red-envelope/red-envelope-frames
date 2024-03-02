@@ -12,8 +12,8 @@ const image3 = "https://i.imgur.com/dKvY6ME.png";
 const image4 = "https://i.imgur.com/xbMs1Ns.png";
 
 
-const provider = new ethers.providers.JsonRpcProvider('https://testnet.inco.org');
-const ensProvider = new ethers.providers.JsonRpcProvider('https://eth.llamarpc.com');
+const provider = new ethers.JsonRpcProvider('https://testnet.inco.org');
+const ensProvider = new ethers.JsonRpcProvider('https://eth.llamarpc.com');
 
 
 async function getMaxGifts(contractAddress): Promise<number> {
