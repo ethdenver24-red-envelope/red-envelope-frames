@@ -11,9 +11,14 @@ contract RedEnvelopeFactory is IRedEnvelopeFactory {
     uint256 public numEnvelopes;
     RedEnvelope[] public envelopes;
 
-    function create(address token, uint256 maxGifts, euint32 totalAmount) external returns (IRedEnvelope) {
+    function create(address token, uint256 maxGifts, bytes calldata totalAmount) external returns (IRedEnvelope) {
+        return create(token, maxGifts, TFHE.asEuint32(totalAmount));
+    }
+
+    function create(address token, uint256 maxGifts, euint32 totalAmount) public returns (IRedEnvelope) {
         EncryptedERC20 erc20 = EncryptedERC20(token);
-        RedEnvelope envelope = new RedEnvelope(msg.sender, erc20, maxGifts, totalAmount);
+        RedEnvelope envelope = new RedEnvelope(msg.sender, erc20, maxGifts);
+        envelope.setAmounts(totalAmount);
         envelopes.push(envelope);
         numEnvelopes += 1;
         erc20.transferFrom(msg.sender, address(envelope), totalAmount);
