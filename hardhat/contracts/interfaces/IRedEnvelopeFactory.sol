@@ -10,5 +10,7 @@ interface IRedEnvelopeFactory {
         IRedEnvelope indexed envelope, address indexed creator, address indexed token, uint256 numGifts
     );
 
+    function create(address token, uint256 maxGifts, bytes calldata totalAmount) external returns (IRedEnvelope);
+
     function create(address token, uint256 maxGifts, euint32 totalAmount) external returns (IRedEnvelope);
 }
