@@ -23,7 +23,7 @@ describe("RedEnvelope", function () {
     this.erc20Instances = await createInstances(this.erc20Address, ethers, this.signers);
   });
 
-  it("should create a red envelope contract via the factory", async function () {
+  it("should create a red envelope contract via the factory, ", async function () {
     const encryptedAmount = this.erc20Instances.alice.encrypt32(10000);
     const transaction = await createTransaction(this.erc20.mint, encryptedAmount);
     await transaction.wait();
@@ -36,11 +36,13 @@ describe("RedEnvelope", function () {
     );
     await approveTx.wait();
 
+    const encryptedAmountEnvelope = this.erc20Instances.alice.encrypt32(1337);
+
     const createTx = await createTransaction(
       this.factory["create(address,uint256,bytes)"],
       this.erc20Address,
       10,
-      encryptedAmount,
+      encryptedAmountEnvelope,
     );
     await createTx.wait();
 
