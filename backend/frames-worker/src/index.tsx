@@ -1,11 +1,12 @@
 import { Button, Frog } from 'frog';
+import axios from 'axios';
+
 
 export const app = new Frog();
 
+
 import { ethers } from 'ethers';
 import ContractABI from './RedEnvelope.json';
-
-
 
 
 const image1 = "https://i.imgur.com/QoLXbDE.png";
@@ -14,15 +15,16 @@ const image3 = "https://i.imgur.com/dKvY6ME.png";
 const image4 = "https://i.imgur.com/xbMs1Ns.png";
 
 const provider = new ethers.JsonRpcProvider('https://testnet.inco.org');
-const ensProvider = new ethers.JsonRpcProvider('https://eth.llamarpc.com');
+const ensProvider = new ethers.JsonRpcProvider('https://cloudflare-eth.com');
 
 async function claimRedEnvelope(contractAddress, userAddress) {
+    console.log("claimRedEnvelope");
     const endpoint = 'https://redenvelopeframes.shuttleapp.rs/claim';
     const data = {
         contract_address: contractAddress,
         user_address: userAddress,
     };
-
+    console.log("data", data);
     try {
         const response = await axios.post(endpoint, data);
         console.log('Response:', response.data);
@@ -35,53 +37,52 @@ async function claimRedEnvelope(contractAddress, userAddress) {
 }
 
 async function getMaxGifts(contractAddress) {
+    console.log("getMaxGifts");
     const contract = new ethers.Contract(contractAddress, ContractABI.abi, provider);
     const maxGifts = await contract.maxGifts();
-    return maxGifts.toNumber();
-    return 10;
+    console.log("maxGifts", maxGifts);
+    return maxGifts;
 }
 
 async function getClaimedAmount(contractAddress, userAddress) {
+    console.log("getClaimedAmount");
     const contract = new ethers.Contract(contractAddress, ContractABI.abi, provider);
     const claimedAmount = await contract.getClaimedAmount(userAddress);
-    return claimedAmount.toNumber();
-    return 135;
+    console.log("claimedAmount", claimedAmount);
+    return claimedAmount;
 }
 
 async function getClaimedGifts(contractAddress) {
+    console.log("getClaimedGifts");
     const contract = new ethers.Contract(contractAddress, ContractABI.abi, provider);
     const claimedGifts = await contract.claimedGifts();
-    return claimedGifts.toNumber();
-    return 9;
+    console.log("claimedGifts", claimedGifts);
+    return claimedGifts;
 }
 
 async function canUserClaim(contractAddress, userAddress) {
+    console.log("canUserClaim");
     const contract = new ethers.Contract(contractAddress, ContractABI.abi, provider);
     const canClaim = await contract.canClaim(userAddress);
+    console.log("canClaim", canClaim);
     return canClaim;
-    return true;
 }
 
 async function getCreatorENSOrAddress(contractAddress) {
     console.log(1)
+    console.log(contractAddress);
     const contract = new ethers.Contract(contractAddress, ContractABI.abi, provider);
     console.log(2)
     let creatorAddress = await contract.creator();
+    console.log(creatorAddress)
     console.log(3)
-    let ensName;
-    try {
-        ensName = await ensProvider.lookupAddress(creatorAddress);
-    } catch (error) {
-        console.log(error)
-        ensName = creatorAddress;
-    }
+    let ensName = "web3third" //await ensProvider.lookupAddress(creatorAddress);
     console.log(4);
     if (ensName) {
         ensName = ensName.substring(0, 20);
     }
     creatorAddress = creatorAddress.substring(0, 20);
     return ensName || creatorAddress;
-    return "webthe3rd.eth";
 }
 
 function getUserRanking(envelopeId, fid) {
@@ -113,8 +114,12 @@ app.frame('/open/:envelopeId', async (c) => {
 
 app.frame('/check/:envelopeId', async (c) => {
     const { envelopeId } = c.req.param();
-    const { fid } = c.frameData.walletAddress;
+    const fid = c.frameData.walletAddress;
+    console.log("user address", fid);
+    console.log("envelopeId", envelopeId);
     const isEntitled = await canUserClaim(envelopeId, fid);
+
+    console.log("isEntitled", isEntitled);
 
     let imageJSX;
     let action;
@@ -154,7 +159,7 @@ app.frame('/check/:envelopeId', async (c) => {
 
 app.frame('/lucky/:envelopeId', async (c) => {
     const { envelopeId } = c.req.param();
-    const { fid } = c.frameData.walletAddress;
+    const fid = c.frameData.walletAddress;
     await claimRedEnvelope(envelopeId, fid)
     const amountReceived = await getClaimedAmount(envelopeId, fid);
     const userRanking = await getUserRanking(envelopeId, fid);
