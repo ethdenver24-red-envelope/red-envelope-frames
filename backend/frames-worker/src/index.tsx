@@ -2,49 +2,68 @@ import { Button, Frog } from 'frog';
 
 export const app = new Frog();
 
+import { ethers } from 'ethers';
+import ContractABI from './RedEnvelope.json';
+
+
 const image1 = "https://i.imgur.com/QoLXbDE.png";
 const image2 = "https://i.imgur.com/dbxFCpQ.png";
 const image3 = "https://i.imgur.com/dKvY6ME.png";
 const image4 = "https://i.imgur.com/xbMs1Ns.png";
 
-function getSenderOfEnvelope(envelopeId: string): string {
-    //return ens
-    return "Vitalik.eth";
+
+const provider = new ethers.providers.JsonRpcProvider('https://testnet.inco.org');
+const ensProvider = new ethers.providers.JsonRpcProvider('https://eth.llamarpc.com');
+
+
+async function getMaxGifts(contractAddress): Promise<number> {
+    const contract = new ethers.Contract(contractAddress, ContractABI, provider);
+    const maxGifts = await contract.maxGifts();
+    return maxGifts.toNumber();
 }
 
-function canClaim(envelopeId: string, fid: string): boolean {
-    console.log("executing canClaim: envelopId", envelopeId);
-    console.log("executing canClaim: fid", fid);
-    return true;
+async function getClaimedAmount(contractAddress, userAddress: string): Promise<number> {
+    const contract = new ethers.Contract(contractAddress, ContractABI, provider);
+    const claimedAmount = await contract.getClaimedAmount(userAddress);
+    return claimedAmount.toNumber();
 }
 
-function getAmountReceived(envelopeId: string, fid: string): number {
-    console.log("executing getAmountReceived: envelopId", envelopeId);
-    console.log("executing getAmountReceived: fid", fid);
-    return 100;
+async function getClaimedGifts(contractAddress): Promise<number> {
+    const contract = new ethers.Contract(contractAddress, ContractABI, provider);
+    const claimedGifts = await contract.claimedGifts();
+    return claimedGifts.toNumber();
 }
 
-function getClaimedGifts(envelopeId: string): number {
-    console.log("executing getClaimedGifts: envelopId", envelopeId);
-    return 5;
+async function canUserClaim(contractAddress: string, userAddress: string): Promise<boolean> {
+    const contract = new ethers.Contract(contractAddress, ContractABI, provider);
+    const canClaim = await contract.canClaim(userAddress);
+    return canClaim;
 }
 
-function getMaxGifts(envelopeId: string): number {
-    console.log("executing getClaimedGifts: envelopId", envelopeId);
-    return 100;
+async function getCreatorENSOrAddress(contractAddress): Promise<string> {
+    const contract = new ethers.Contract(contractAddress, ContractABI, provider);
+    const creatorAddress = await contract.creator();
+
+    // Attempt to resolve the ENS name for the creator address. If found, return the ENS name.
+    let ensName = await ensProvider.lookupAddress(creatorAddress);
+    // enforce max length of ENS name
+    if (ensName) {
+        ensName = ensName.substring(0, 20);
+    }
+    return ensName || creatorAddress;
 }
 
 
 function getUserRanking(envelopeId: string, fid: string): number {
     console.log("executing getUserRanking: envelopId", envelopeId);
     console.log("executing getUserRanking: fid", fid);
-    return 1;
+    return 5;
 }
 
 // Frame 1: Display Sender's Address and "Open" Button
 app.frame('/open/:envelopeId', (c) => {
     const { envelopeId } = c.req.param();
-    const senderAddress = getSenderOfEnvelope(envelopeId);
+    const senderAddress = getCreatorENSOrAddress(envelopeId);
     return c.res({
         action: `/check/${envelopeId}`,
         image: (
@@ -66,7 +85,8 @@ app.frame('/check/:envelopeId', (c) => {
     const { envelopeId } = c.req.param();
     const { fid } = c.frameData.walletAddress;
     console.log("walletAddress", c.frameData.walletAddress);
-    const isEntitled = canClaim(envelopeId, fid);
+    const isEntitled = canUserClaim(envelopeId, fid);
+
 
     let imageJSX;
     let action;
@@ -111,7 +131,7 @@ app.frame('/lucky/:envelopeId', (c) => {
     const { envelopeId } = c.req.param();
     const { fid } = c.frameData.walletAddress;
     console.log("walletAddress", c.frameData.walletAddress);
-    const amountReceived = getAmountReceived(envelopeId, fid);
+    const amountReceived = getClaimedAmount(envelopeId, fid);
     const userRanking = getUserRanking(envelopeId, fid);
     const maxClaimedGifts = getMaxGifts(envelopeId);
 
