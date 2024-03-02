@@ -9,8 +9,8 @@ import { Connect } from "./Connect";
 import RedEnvelopeFactoryAbi from "./abis/RedEnvelopeFactory.json";
 import EncryptedERC20Abi from "./abis/EncryptedERC20.json";
 
-const FACTORY = "0x7737b7c57827c7Aa99a254ba8bd0719013d1C860";
-const TOKEN = "0xC9981c2179a7d52E15A64e4B82eA54bB693407fe";
+const FACTORY = "0x25f6574E8372C9066806aC3277B4F9F0E5704Fc1";
+const TOKEN = "0x88005f4bad3e985C2f862d796623C5400391d089";
 const ENVELOPE = "0xc1a0a99B9783Eb5c1cc760F80a45ec29B70d0A68";
 const FRAME_URL = "https://667c-37-19-210-5.ngrok-free.app/open/";
 
@@ -75,33 +75,35 @@ function Example({ account, provider, signer }) {
 
     console.log("Creating red envelope");
     if (!tokenAddress || !numRecipients || !amountUint32 || !signer) return;
-    // approve tokens
+    // create red envelope
     console.log("Encrypting token amount");
     const instance = await getInstance();
-    const encryptedApprovalAmount = instance.encrypt32(+amountUint32);
-    const tx = await tokenContract.approve(
-      tokenAddress,
-      encryptedApprovalAmount
-    );
-    console.log(tx);
-    await tx.wait();
-    console.log("Tokens approved");
-    // create red envelope
+    const encryptedTransferAmount = instance.encrypt32(+amountUint32);
     console.log("Creating red envelope");
-    console.log(tokenAddress, numRecipients, encryptedApprovalAmount);
+    console.log(tokenAddress, numRecipients, encryptedTransferAmount);
+    const numEnvelopesBefore = await factoryContract.numEnvelopes();
     const tx2 = await factoryContract.create(
       tokenAddress,
       numRecipients,
-      encryptedApprovalAmount
+      encryptedTransferAmount
     );
     console.log(tx2);
     await tx2.wait();
     console.log("Red envelope created");
     // get return value from tx2
-    const iface = new Interface(RedEnvelopeFactoryAbi);
-    const event = iface.parseLog(tx2.logs[0]);
-    const redEnvelopeAddress = event.args[0];
+    const redEnvelopeAddress = await factoryContract.envelopes(
+      numEnvelopesBefore
+    );
     console.log(redEnvelopeAddress);
+    // transfer tokens
+    const tx = await tokenContract["transfer(address,bytes)"](
+      redEnvelopeAddress,
+      encryptedTransferAmount
+    );
+    console.log(tx);
+    await tx.wait();
+    console.log("Tokens transferred");
+    setDisplayUrl(`${FRAME_URL}${redEnvelopeAddress}`);
   }, [tokenAddress, numRecipients, amountUint32, signer]);
 
   const handleResolveBalance = useCallback(async () => {
