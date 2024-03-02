@@ -9,6 +9,7 @@ import "./interfaces/IRedEnvelope.sol";
 contract RedEnvelope is IRedEnvelope {
     using TFHE for *;
 
+    address public factory;
     address public creator;
     EncryptedERC20 public token;
     uint256 public maxGifts;
@@ -16,26 +17,40 @@ contract RedEnvelope is IRedEnvelope {
 
     address[] internal _claimers;
     euint32[] internal _amounts;
-    euint32 internal _topAmount;
+    // euint32 internal _topAmount;
 
     mapping(address => bool) internal _claimed;
     mapping(address => uint32) internal _claimedAmounts;
 
-    constructor(address _creator, EncryptedERC20 _token, uint256 _maxGifts, euint32 _totalAmount) {
+    modifier onlyFactory() {
+        require(msg.sender == factory, "RedEnvelope: only factory");
+        _;
+    }
+
+    constructor(address _creator, EncryptedERC20 _token, uint256 _maxGifts) {
         require(_maxGifts > 0, "maxGifts must be > 0");
         require(_maxGifts <= 5000, "maxGifts must be <= 5000");
-        TFHE.optReq(_totalAmount.gt(0));
 
+        factory = msg.sender;
         creator = _creator;
         token = _token;
         maxGifts = _maxGifts;
         _amounts = new euint32[](_maxGifts);
         _claimers = new address[](_maxGifts);
+    }
 
+    function setAmounts(bytes calldata _totalAmount) external {
+        setAmounts(TFHE.asEuint32(_totalAmount));
+    }
+
+    function setAmounts(euint32 _totalAmount) public onlyFactory {
+        uint256 _maxGifts = maxGifts;
+        // _topAmount = TFHE.asEuint32(0);
         for (uint256 i; i < _maxGifts; ++i) {
-            euint32 remainder = _totalAmount.rem(TFHE.decrypt(TFHE.randEuint32()));
-            _amounts[i] = TFHE.cmux(TFHE.asEbool(i == _maxGifts - 1), _totalAmount, remainder);
-            _topAmount = TFHE.cmux(_amounts[i].gt(_topAmount), _amounts[i], _topAmount);
+            euint32 remainder = _totalAmount.rem(1);
+            euint32 amount = TFHE.cmux(TFHE.asEbool(i == _maxGifts - 1), _totalAmount, remainder);
+            _amounts[i] = amount;
+            // _topAmount = TFHE.cmux(TFHE.gt(amount, _topAmount), amount, _topAmount);
             _totalAmount = _totalAmount.sub(remainder);
         }
     }
